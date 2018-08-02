@@ -18,22 +18,30 @@ AnimatableValue = AnimatableValue or Class.New()
 function AnimatableValue:Init(value, props)
 	value = value or 0
 	props = props or {}
-	debounce = props.debounce or 0.2
 
 	self.animations = {}
 	self.current = value
 
 	if props.smooth then
 		self.smoothing = true
+		self.smooth_multiplier = props.smooth_multiplier or 1
 		self.smooth = value
 		self.last = value
 		self.new = value
 	end
 
+	local debounce = props.debounce
+
 	if props.callback then
+		debounce = debounce or 0.1
+	end
+
+	if debounce then
 		self.checking_changes = true
-		self.callback = callback
-		self.debounce = debounce
+		self.callback = props.callback
+		self.debounce_time = debounce
+		self.debounce = value
+		self.last_change = value
 		self.last_change_time = CurTime()
 	end
 end
@@ -48,14 +56,14 @@ function AnimatableValue:GetAnimationEndTime()
 	return end_time
 end
 
-function AnimatableValue:AnimateTo(value, props_or_duration, ease, delay, remove, callback)
+function AnimatableValue:AnimateTo(value, props_or_duration, ease, delay, finish, callback)
 	local duration
 
 	if istable(props_or_duration) then
 		duration = props_or_duration.duration or 0.2
 		ease = props_or_duration.ease or DefaultEase
 		delay = props_or_duration.delay or 0
-		remove = props_or_duration.remove
+		finish = props_or_duration.finish
 		callback = props_or_duration.callback
 	else
 		duration = props_or_duration or 0.2
@@ -81,16 +89,16 @@ function AnimatableValue:AnimateTo(value, props_or_duration, ease, delay, remove
 		end_time = start_time + duration + delay,
 		ease = ease,
 		delay = delay,
-		remove = remove,
+		finish = finish,
 		callback = callback
 	})
 
 	return self
 end
 
-function AnimatableValue:Remove()
+function AnimatableValue:Finish()
 	self.animations = {}
-	self:Finish()
+	self:DisconnectFromHooks()
 end
 
 function AnimatableValue:Animate()
@@ -114,16 +122,21 @@ function AnimatableValue:Animate()
 				first_anim.callback(first_anim)
 			end
 
-			if first_anim.remove then
-				self:Remove()
+			if first_anim.finish then
+				self:Finish()
 			end
 		end
 	end
 end
 
 function AnimatableValue:DetectChanges()
-	if CurTime() > (self.last_change_time + self.debounce) and self.last_change ~= self.current then
-		self.callback(self)
+	if CurTime() > (self.last_change_time + self.debounce_time) and self.last_change ~= self.current then
+		self.debounce = self.current
+
+		if self.callback then
+			self.callback(self)
+		end
+
 		self.last_change = self.current
 		self.last_change_time = CurTime()
 	end
@@ -132,7 +145,7 @@ end
 function AnimatableValue:Smooth()
 	local ang = isangle(self.current)
 	local color = IsColor(self.current)
-	local mult = FrameMultiplier()
+	local mult = FrameMultiplier() * self.smooth_multiplier
 
 	if ang then
 		if (self.last.y < -90) and (self.current.y > 90) then
