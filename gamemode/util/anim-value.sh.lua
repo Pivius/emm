@@ -6,25 +6,23 @@ local function FrameMultiplier()
 	return FrameTime() * 10
 end
 
-local function IsColor(color)
-	return istable(color) and color.r and color.g and color.b
-end
-
 
 -- # Class
 
 AnimatableValue = AnimatableValue or Class.New()
 
 function AnimatableValue:Init(value, props)
-	value = value or 0
+	value = value ~= nil and value or 0
 	props = props or {}
 
 	self.animations = {}
 	self.current = value
+	self.generate = props.generate
 
 	if props.smooth then
 		self.smoothing = true
 		self.smooth_multiplier = props.smooth_multiplier or 1
+		self.smooth_delta_only = props.smooth_delta_only
 		self.smooth = value
 		self.last = value
 		self.new = value
@@ -39,7 +37,13 @@ function AnimatableValue:Init(value, props)
 	if debounce then
 		self.checking_changes = true
 		self.callback = props.callback
-		self.debounce_time = debounce
+
+		if isnumber(debounce) then
+			self.debounce_time = debounce
+		else
+			self.debounce_time = 0.1
+		end
+
 		self.debounce = value
 		self.last_change = value
 		self.last_change_time = CurTime()
@@ -142,33 +146,60 @@ function AnimatableValue:DetectChanges()
 	end
 end
 
+local function Smooth(mult, curr, last)
+	return (last + (curr * mult))/(mult + 1)
+end
+
 function AnimatableValue:Smooth()
 	local ang = isangle(self.current)
 	local color = IsColor(self.current)
 	local mult = FrameMultiplier() * self.smooth_multiplier
 
+	local curr = self.current
+	local last = self.last or curr
+
 	if ang then
-		if (self.last.y < -90) and (self.current.y > 90) then
-			self.last.y = self.last.y + 360
-		elseif (self.last.y > 90) and (self.current.y < -90) then
-			self.last.y = self.last.y - 360
+		if (last.y < -90) and (curr.y > 90) then
+			last.y = last.y + 360
+		elseif (last.y > 90) and (curr.y < -90) then
+			last.y = last.y - 360
 		end
 	end
 
-	self.smooth = self.last
+	if self.smooth_delta_only then
+		self.smooth = curr - last
+	else
+		self.smooth = last
+	end
 
 	if ang then
-		self.new = Angle(((self.current.p * mult) + self.last.p)/(mult + 1), ((self.current.y * mult) + self.last.y)/(mult + 1), 0)
+		self.new = Angle(Smooth(mult, curr.p, last.p), Smooth(mult, curr.y, last.y), Smooth(mult, curr.r, last.r))
 	elseif color then
-		self.new = Color(((self.current.r * mult) + self.last.r)/(mult + 1), ((self.current.g * mult) + self.last.g)/(mult + 1), ((self.current.b * mult) + self.last.b)/(mult + 1), ((self.current.a * mult) + self.last.a)/(mult + 1))
+		self.new = Color(Smooth(mult, curr.r, last.r), Smooth(mult, curr.g, last.g), Smooth(mult, curr.b, last.b), Smooth(mult, curr.a, last.a))
 	else
-		self.new = ((self.current * mult) + self.last)/(mult + 1)
+		self.new = Smooth(mult, curr, last)
 	end
 
 	self.last = self.new
 end
 
+function AnimatableValue:Freeze(duration)
+	self.frozen = true
+	self.freeze_time = CurTime()
+	self.freeze_duration = duration or 0.2
+	self.smoothing = false
+end
+
+function AnimatableValue:UnFreeze()
+	self.frozen = false
+	self.smoothing = true
+end
+
 function AnimatableValue:Think()
+	if self.generate then
+		self.current = self.generate(self.current)
+	end
+
 	self:Animate()
 
 	if self.checking_changes then
@@ -177,6 +208,10 @@ function AnimatableValue:Think()
 
 	if self.smoothing then
 		self:Smooth()
+	end
+
+	if self.frozen and CurTime() > (self.freeze_time + self.freeze_duration) then
+		self:UnFreeze()
 	end
 end
 Class.AddHook(AnimatableValue, "Think")

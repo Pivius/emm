@@ -10,13 +10,18 @@ function ENT:Initialize()
 	self:DrawShadow(false)
 
 	if SERVER then
-		local sprite = util.SpriteTrail(self, 0, COLOR_WHITE, false, 25, 25, 4, 0.125, "emm/trail/flat.vmt")
+		local sprite = util.SpriteTrail(self, 0, COLOR_WHITE, false, 4, 4, 4, 0.125, "emm2/trails/flat.vmt")
 
 		self:SetSprite(sprite)
 		self:DeleteOnRemove(sprite)
-		self.width = AnimatableValue.New(20)
+		self.width = AnimatableValue.New(4)
 	else
-		self.animated_color = AnimatableValue.New(COLOR_WHITE, {smooth = true})
+		self.animatable_color = AnimatableValue.New(COLOR_WHITE, {
+			smooth = true,
+			generate = function ()
+				return self:GetOwner().color
+			end
+		})
 	end
 end
 
@@ -38,7 +43,7 @@ end
 
 function ENT:OnRemove()
 	if CLIENT then
-		self.animated_color:Finish()
+		self.animatable_color:Finish()
 	end
 end
 
@@ -61,10 +66,8 @@ function ENT:Think()
 		local parent = self:GetParent()
 		local sprite = self:GetSprite()
 
-		self.animated_color.current = owner.color
-
 		if IsValid(sprite) then
-			sprite:SetColor(self.animated_color.smooth)
+			sprite:SetColor(self.animatable_color.smooth)
 		end
 
 		local render_pos
@@ -85,7 +88,7 @@ function ENT:Think()
 
 				local trace = util.TraceLine({
 					start = pos,
-					endpos = pos + (eye_norm * Vector(-50, -50, 0)),
+					endpos = pos + (eye_norm * Vector(-70, -70, 0)),
 					mask = MASK_NPCWORLDSTATIC
 				})
 
