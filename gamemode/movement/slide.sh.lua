@@ -127,17 +127,17 @@ function SlideService.Slide(ply, move, trace, slide_vel)
 
 			if (move:GetVelocity().z >= 0 and ply.sliding) or ply.surfing then
 				local origin = move:GetOrigin()
-				local trace
+				local second_trace
 
 				slide_vel = slide_vel + ply:GetBaseVelocity()
 				origin.z = trace.HitPos.z + ply.slide_hover_height
 				ply:SetGroundEntity(NULL)
 				move:SetVelocity(slide_vel)
 
-				tr = SlideService.Trace(ply, slide_vel, origin)
+				second_trace = SlideService.Trace(ply, slide_vel, origin)
 
-				if tr then
-					if not tr.StartSolid then
+				if second_trace then
+					if not second_trace.StartSolid then
 						move:SetOrigin(origin)
 					end
 				end
