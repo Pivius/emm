@@ -18,6 +18,7 @@ EMM.Include {
 	"util/spectate",
 	"util/trail",
 	"util/sound-isolation",
+	"util/task",
 
 	"player/hooks",
 	"player/methods",
