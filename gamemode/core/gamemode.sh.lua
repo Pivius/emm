@@ -5,7 +5,6 @@ EMM.Include {
 	"settings/settings",
 
 	"util/class",
-	"util/net",
 	
 	"command/command",
 	"command/class",
@@ -14,6 +13,7 @@ EMM.Include {
 	"util/variables",
 	"util/util",
 	"util/palette",
+	"util/net",
 	"util/cubic-bezier",
 	"util/anim-value",
 	"util/pred-sound",

@@ -15,6 +15,5 @@ hook.Add(
 	CommandService.ChatCommand
 )
 
-hook.Add("OnCommand", "CommandSerive.OnCommand", function(ply, cmd, args)
-
+hook.Add("OnCommand", "CommandService.OnCommand", function(ply, cmd, args)
 end)

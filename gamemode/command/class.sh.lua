@@ -71,7 +71,14 @@ function Command:SetFunction(...)
 end
 
 function Command:Execute(sender, ...)
+	local cmd_hk
+
 	sender = (sender != NULL and sender or "server")
-	hook.Call("OnCommand", nil, sender, self, {...})
+	cmd_hk = hook.Call("OnCommand", nil, sender, self, {...})
+
+	if cmd_hk then
+		return
+	end
+
 	self.func(sender, ...)
 end
