@@ -85,13 +85,13 @@ function CommandService.AutoComplete(cmd, args)
 	local con_cmd = cmd .. " "
 
 	cmd = CommandService.Commands[cmd:sub(5)]
-	
+
 	if istable(cmd) then
 		args = args:sub(2):Split(" ")
 		
 		if cmd.args[#args] == "player" then
 			for _, ply in pairs(player.GetAll()) do
-				if string.find(string.lower(" " .. ply:Nick()), args[#args]:lower()) then
+				if string.lower(" " .. ply:Nick()):find(args[#args]:lower()) then
 					table.insert(auto_complete, con_cmd .. ply:Nick())
 				end
 			end
@@ -104,21 +104,13 @@ function CommandService.AutoComplete(cmd, args)
 				auto_complete = {con_cmd .. "[".. cmd.args[#args + 1] .. "]"}
 
 				if isnumber(cmd.args[#args + 2]) then
-					auto_complete = {con_cmd .. "[".. cmd.args[#args + 1] .. " .. " .. cmd.args[#args + 2] .. "]"}
+					auto_complete = {con_cmd .. "[".. cmd.args[#args + 1] .. " - " .. cmd.args[#args + 2] .. "]"}
 				end
 			end
 
 			return auto_complete
 		end
 	end
---[[
-	for _, v in pairs(player.GetAll()) do
-		if string.find(string.lower(" " .. v:Nick()), args:lower()) then
-			table.insert(tbl, "emm_spectate " .. v:Nick())
-		end
-	end
-
-	return tbl]]
 end
 
 function CommandService.ToType(type, arg)

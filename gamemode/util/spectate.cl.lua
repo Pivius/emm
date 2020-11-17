@@ -4,7 +4,7 @@ SpectateService.buttons = 0
 
 
 -- # Spectating
-CommandService.AddCommand("spectate", function() end)
+CommandService.AddCommand("spectate", "player", function() end)
 
 function SpectateService.TargetKeyDown(key)
 	return bit.band(SpectateService.buttons, key)

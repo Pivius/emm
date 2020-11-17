@@ -7,6 +7,7 @@ function CommandService.CreateConCommand(cmd)
 				concommand.Run(ply, "net_emm_"  .. cmd.name, args)
 			end
 		end
+		
 		cmd:Execute(sender, unpack(args))
 	end, CommandService.AutoComplete)
 end
