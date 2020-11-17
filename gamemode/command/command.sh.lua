@@ -12,7 +12,7 @@ CommandService.object_types = {
 	vector = function(vector) return CommandService.ToType("vector", "Vector(unpack(string.Explode(',', '" .. vector .. "')))") end,
 	angle = function(ang) return CommandService.ToType("angle", "Angle(unpack(string.Explode(',', '" .. ang .. "')))") end,
 	player = function(ply)
-		return CommandService.FindTarget(ply)
+		return CommandService.FindTarget(ply)[1]
 	end,
 
 }
