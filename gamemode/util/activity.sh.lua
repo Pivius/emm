@@ -16,6 +16,27 @@ hook.Add(
 
 -- # Utils
 
+function ActivityService.NewActivity(activity)
+	local new_activity = {}
+
+	assert(activity.name, "Missing activity name")
+
+	for k, v in pairs(activity) do
+		if k ~= "name" then
+			new_activity[k] = v
+		end
+	end
+
+	if not ActivityService.activities[activity.name] then
+		for _, ply in pairs(player.GetAll()) do
+			ply.activities[activity.name] = new_activity
+		end
+	end
+
+	ActivityService.activities[activity.name] = new_activity
+end
+
+
 function ActivityService.SetStats(ply, activity, stats)
 	assert(istable(stats), "3rd argument is not a table!")
 
@@ -34,54 +55,22 @@ function ActivityService.AddStats(ply, activity, stats)
 	end
 end
 
-function ActivityService.RegisterActivity(activities)
-	for key, activity in pairs(activities) do
-		if ActivityService.activities[key] then
-			activity.id = ActivityService.activities[key].id
-			ActivityService.activities[key] = activity
-		else
-			activity.id = table.Count(ActivityService.activities) + 1
-			ActivityService.activities[key] = activity
-
-			for _, ply in pairs(player.GetAll()) do
-				ply.activities[key] = activity
-			end
-		end
-	end
-end
-
 
 -- # Init
 
 local ACTIVITY_DIRECTORY = "activities/"
 local activity_files, activity_dirs = file.Find(gamemode_lua_directory..ACTIVITY_DIRECTORY.."*", "LUA")
-local activity_fenv_metatable = {__index = _G}
-
-function ActivityService.LoadActivity(path)
-	local activity_fenv = {}
-
-	activity_fenv.ACTIVITY = ActivityService.activities
-	setmetatable(activity_fenv, activity_fenv_metatable)
-
-	setfenv(0, activity_fenv)
-	EMM.Include(path)
-	setfenv(0, _G)
-
-	ActivityService.RegisterActivity(activity_fenv.ACTIVITY)
-end
 
 function ActivityService.LoadActivities()
 	for _, activity in pairs(activity_files) do
-		ActivityService.LoadActivity(ACTIVITY_DIRECTORY..activity)
+		EMM.Include(ACTIVITY_DIRECTORY..activity)
 	end
 
 	for _, activity in pairs(activity_dirs) do
-		ActivityService.LoadActivity(ACTIVITY_DIRECTORY..activity.."/init")
+		EMM.Include(ACTIVITY_DIRECTORY..activity.."/init")
 	end
 
 	hook.Run "LoadActivityPrototypes"
 end
 hook.Add("Initialize", "ActivityService.LoadActivities", ActivityService.LoadActivities)
 hook.Add("OnReloaded", "ActivityService.ReloadActivities", ActivityService.LoadActivities)
-
-PrintTable(ActivityService.activities)
