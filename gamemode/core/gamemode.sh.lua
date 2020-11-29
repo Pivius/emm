@@ -9,7 +9,8 @@ EMM.Include {
 	"command/command",
 	"command/class",
 	"command/hooks",
-	
+
+	"util/activity",
 	"util/variables",
 	"util/util",
 	"util/palette",

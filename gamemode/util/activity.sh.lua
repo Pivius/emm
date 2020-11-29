@@ -19,23 +19,22 @@ hook.Add(
 function ActivityService.NewActivity(activity)
 	local new_activity = {}
 
-	assert(activity.name, "Missing activity name")
+	assert(activity.key, "Missing activity key")
 
 	for k, v in pairs(activity) do
-		if k ~= "name" then
+		if k ~= "key" then
 			new_activity[k] = v
 		end
 	end
 
-	if not ActivityService.activities[activity.name] then
+	if not ActivityService.activities[activity.key] then
 		for _, ply in pairs(player.GetAll()) do
-			ply.activities[activity.name] = new_activity
+			ply.activities[activity.key] = new_activity
 		end
 	end
 
-	ActivityService.activities[activity.name] = new_activity
+	ActivityService.activities[activity.key] = new_activity
 end
-
 
 function ActivityService.SetStats(ply, activity, stats)
 	assert(istable(stats), "3rd argument is not a table!")
