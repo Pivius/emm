@@ -1,5 +1,8 @@
 TaskService = TaskService or Class.New()
 
+
+-- Utils
+
 function TaskService:Init()
 	self.completions = {}
 	self.running = {}
@@ -21,10 +24,12 @@ function TaskService:Hook(hook, identifier, func)
 			self:Stop()
 		else
 			if not self:HasCompleted(ply) and self:IsRunningTask(ply) and func(...) then
-					self:Complete(ply)
+				self:Complete(ply)
 			end
 		end
 	end
+	
+	self:Start()
 end
 
 function TaskService:Start()
@@ -39,10 +44,19 @@ function TaskService:AddPlayer(ply)
 	self.running[ply] = true
 end
 
+function TaskService:RemovePlayer(ply)
+	self.running[ply] = false
+end
+
 function TaskService:Complete(ply)
 	self.completions[ply] = true
 	self.running[ply] = false
 	hook.Call("Task_Complete", nil, ply, self.identifier)
+end
+
+function TaskService:Clear()
+	self.completions = {}
+	self.running = {}
 end
 
 function TaskService:IsRunningTask(ply)
@@ -50,10 +64,5 @@ function TaskService:IsRunningTask(ply)
 end
 
 function TaskService:HasCompleted(ply)
-	return self.completions[ply]
+	return self.completions[ply] == true
 end
-
-
-task = TaskService.New()
-
-task:Start()
