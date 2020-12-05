@@ -11,23 +11,34 @@ CommandService.object_types = {
 	table = function(tbl) return CommandService.ToType("table", "string.Explode(',', '" .. tbl .. "')") end,
 	vector = function(vector) return CommandService.ToType("vector", "Vector(unpack(string.Explode(',', '" .. vector .. "')))") end,
 	angle = function(ang) return CommandService.ToType("angle", "Angle(unpack(string.Explode(',', '" .. ang .. "')))") end,
-	player = function(ply)
-		return CommandService.FindTarget(ply)[1]
-	end,
+	player = function(ply) return CommandService.FindTarget(ply)[1] end,	
+	players = function(tbl) 
+		local targets = CommandService.object_types.table(tbl)
 
+		if #targets > 1 then
+			return CommandService.FindTarget(targets)
+		else
+			return CommandService.FindTarget(targets)[1]
+		end
+	end,
 }
 
 
 -- # Symbols
 
-COMMAND_PREFIX = 1
-COMMAND_SELF = 2
-COMMAND_ALL = 3
+CommandService.prefix = "!/"
 
-CommandService.Symbols = {
-	"!/",
-	"^",
-	"*"
+CommandService.symbols = {
+	["^"] = {varargs = {"player", "players"}, callback = function(sender) return sender:Nick() end},
+	["*"] = {varargs = {"players"}, callback = function(sender) 
+		local names = ""
+
+		for _, ply in pairs(player.GetAll()) do
+			names = names..","..ply:Nick()
+		end
+
+		return names:sub(2)
+	end}
 }
 
 
@@ -35,17 +46,36 @@ CommandService.Symbols = {
 
 function CommandService.FindTarget(target)
 	local tbl = {}
-
-	for _, ply in pairs(player.GetAll()) do
-		if string.lower(ply:Nick()):find(target:lower()) then
-			table.insert(tbl, ply)
+	
+	if istable(target) then
+		for _, name in pairs(target) do
+			if not IsEntity(name) then
+				for _, ply in pairs(player.GetAll()) do
+					if string.lower(ply:Nick()):find(name:lower()) and not table.HasValue(tbl, ply) then
+						table.insert(tbl, ply)
+						break
+					end
+				end
+			else
+				table.insert(tbl, target)
+			end
+		end
+	else
+		if not IsEntity(target) then
+			for _, ply in pairs(player.GetAll()) do
+				if string.lower(ply:Nick()):find(target:lower()) then
+					table.insert(tbl, ply)
+				end
+			end
+		else
+			table.insert(tbl, target)
 		end
 	end
-	
+
 	if #tbl > 0 then
 		return tbl
 	else
-		return nil
+		return {nil}
 	end
 end
 
@@ -55,10 +85,8 @@ function CommandService.FindCommand(str)
 	str = str:lower()
 
 	for name, cmd in pairs(CommandService.Commands) do
-		if name:find(str) then
-			if table.HasValue(cmd.cmds, str) then
-				return cmd
-			end
+		if name:find(str) and table.HasValue(cmd.cmds, str) then
+			return cmd
 		end
 	end
 	
@@ -117,12 +145,30 @@ function CommandService.ToType(type, arg)
 	end
 end
 
-function CommandService.AddCommand(...)
-	local args = {...}
+function CommandService.AddCommand(props)
+	assert(istable(props), "Properties is not a table")
+	assert(props.name, "Command name not specified")
+
 	local cmd = Command.New()
 
-	cmd:SetCommand(table.remove(args, 1))
-	cmd:SetFunction(unpack(args))
+	if not props.callback then
+		props.callback = function() end
+	end
+
+	if not props.varargs then
+		props.varargs = {}
+	end
+
+	if props.flags then
+		cmd:AddFlags(props.flags)
+	end
+	
+	assert(istable(props.varargs), "Varargs is not a table")
+
+
+
+	cmd:SetCommand(props.name)
+	cmd:SetCallback(unpack(props.varargs), props.callback)
 	CommandService.CreateConCommand(cmd)
 	CommandService.Commands[cmd.name] = cmd
 end

@@ -63,7 +63,7 @@ function SpectateService.Spectate(ply, target)
 		end
 	end
 end
-CommandService.AddCommand("spectate", "player", SpectateService.Spectate)
+CommandService.AddCommand({name = "spectate", varargs = {"player"}, callback = SpectateService.Spectate})
 
 function SpectateService.UnSpectate(ply)
 	if ply:GetObserverMode() ~= OBS_MODE_NONE then
