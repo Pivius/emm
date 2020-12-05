@@ -29,6 +29,12 @@ ActivityService.NewActivity{
 	last_walljump = 0
 }
 
+ActivityService.NewActivity{
+	key = "wallcheck",
+	name = "Wallcheck",
+	count = 0,
+}
+
 local function GetButtons(buttons)
 	return bit.band(buttons, bit.bor(IN_FORWARD, IN_BACK)), bit.band(buttons, bit.bor(IN_MOVELEFT, IN_MOVERIGHT))
 end
@@ -98,6 +104,14 @@ hook.Add("SetupMove", "Activity.WallJumpQueue", function(ply, move, cmd)
 			end
 
 			table.remove(ply.activities.queue_walljump.queue, 1)
+		end
+	end
+end)
+
+hook.Add("SetupMove", "Activity.Wallcheck", function(ply, move, cmd) 
+	if ply.activities.queue_walljump.last_walljump + 1.5 >= CurTime() and IsFirstTimePredicted() then
+		if ply.old_velocity:Length2DSqr() * 0.2 > move:GetVelocity():Length2DSqr() then
+			ActivityService.SetData(ply, "wallcheck", {count = ply.activities.wallcheck.count + 1})
 		end
 	end
 end)
