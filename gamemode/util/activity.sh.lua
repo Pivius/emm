@@ -13,13 +13,19 @@ hook.Add(
 	ActivityService.InitPlayerProperties
 )
 
+function ActivityService.Reload()
+	for _, ply in pairs(player.GetAll()) do
+		ply.activities = table.Copy(ActivityService.activities)
+	end
+end
+hook.Add("OnReloaded", "ActivityService.Reload", ActivityService.Reload)
 
 -- # Utils
 
 function ActivityService.NewActivity(activity)
-	local new_activity = {}
-
 	assert(activity.key, "Missing activity key")
+
+	local new_activity = {}
 
 	for k, v in pairs(activity) do
 		if k ~= "key" then
@@ -36,22 +42,36 @@ function ActivityService.NewActivity(activity)
 	ActivityService.activities[activity.key] = new_activity
 end
 
-function ActivityService.SetStats(ply, activity, stats)
-	assert(istable(stats), "3rd argument is not a table!")
+function ActivityService.SetData(ply, activity, data)
+	assert(istable(data), "3rd argument is not a table!")
 
-	for k, v in pairs(stats) do
-		ply.activities[activity][k] = v
-	end
-end
-
-function ActivityService.AddStats(ply, activity, stats)
-	assert(istable(stats), "3rd argument is not a table!")
-
-	for k, v in pairs(stats) do
-		if istable(ply.activities[activity][k]) then
-			table.insert(ply.activities[activity][k], v)
+	for k, v in pairs(data) do
+		if ply.activities[activity][k] then
+			ply.activities[activity][k] = v
 		end
 	end
+
+	hook.Call("UpdateActivity", GAMEMODE, ply, activity, data)
+end
+
+function ActivityService.AddData(ply, activity, data)
+	assert(istable(data), "3rd argument is not a table!")
+
+	for k, v in pairs(data) do
+		if ply.activities[activity][k] then
+			if istable(ply.activities[activity][k]) then
+				table.insert(ply.activities[activity][k], v)
+			else
+				ply.activities[activity][k] = v
+			end
+		end
+	end
+
+	hook.Call("UpdateActivity", GAMEMODE, ply, activity, data)
+end
+
+function ActivityService.ResetActivity(ply, activity)
+	ply.activities[activity] = ActivityService.activities[activity]
 end
 
 
@@ -69,7 +89,7 @@ function ActivityService.LoadActivities()
 		EMM.Include(ACTIVITY_DIRECTORY..activity.."/init")
 	end
 
-	hook.Run "LoadActivityPrototypes"
+	hook.Run "LoadActivities"
 end
 hook.Add("Initialize", "ActivityService.LoadActivities", ActivityService.LoadActivities)
 hook.Add("OnReloaded", "ActivityService.ReloadActivities", ActivityService.LoadActivities)

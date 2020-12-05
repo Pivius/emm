@@ -1,28 +1,25 @@
+-- Walljump types
+
 ActivityService.NewActivity{
 	key = "xwalljump",
 	name = "XWJ",
-	count = 0
+	count = 0,
+	angle = {sum = 0, samples = 0},
+	interval = {sum = 0, samples = 0}
 }
 
 ActivityService.NewActivity{
 	key = "hwalljump",
 	name = "HWJ",
-	count = 0
+	count = 0,
+	angle = {sum = 0, samples = 0},
+	interval = {sum = 0, samples = 0}
 }
 
 ActivityService.NewActivity{
 	key = "vwalljump",
 	name = "VWJ",
 	count = 0,
-}
-
-ActivityService.NewActivity{
-	key = "walljump_angle",
-	name = "WallJump Angle",
-	xwalljump_sum = 0,
-	xwalljump_samples = 0,
-	hwalljump_sum = 0,
-	hwalljump_samples = 0
 }
 
 ActivityService.NewActivity{
@@ -36,44 +33,48 @@ local function GetButtons(buttons)
 	return bit.band(buttons, bit.bor(IN_FORWARD, IN_BACK)), bit.band(buttons, bit.bor(IN_MOVELEFT, IN_MOVERIGHT))
 end
 
-local function XWallJump(ply, move, angle, dir)
+hook.Add("WallJump", "Activity.Walljump", function(ply, move, angle, dir)
 	local fwd_buttons, side_buttons = GetButtons(move:GetButtons()) 
 	local fwd_old_buttons = GetButtons(move:GetOldButtons()) 
-	local last_walljump = ply.activities.queue_walljump.last_walljump
+	local cur_time = CurTime()
+	local walljump_type = nil
+	
+	if ply.activities.queue_walljump.last_walljump ~= cur_time then
+		if ((fwd_buttons > 0 and side_buttons > 0) or (fwd_old_buttons > 0 and side_buttons > 0))  then
+			walljump_type = "xwalljump"
+		elseif ((fwd_buttons == 0 and side_buttons > 0) and fwd_old_buttons == 0) then
+			walljump_type = "hwalljump"
+		end
+	end
 
-	if ((fwd_buttons > 0 and side_buttons > 0) or (fwd_old_buttons > 0 and side_buttons > 0)) and last_walljump ~= CurTime() then
-		ActivityService.AddStats(ply, "queue_walljump", {queue = {walljump = "xwalljump", dir = dir, angle = angle, time = CurTime()}})
-		ActivityService.SetStats(ply, "queue_walljump", {last_walljump = CurTime()})
+	if walljump_type then
+		ActivityService.AddData(ply, "queue_walljump", {
+			queue = {
+				walljump = walljump_type, 
+				dir = dir, angle = angle, 
+				time = cur_time, 
+				interval = math.Round(cur_time - ply.activities.queue_walljump.last_walljump, 4)
+			}, 
+			last_walljump = cur_time
+		})
 	end
 	
-end
-hook.Add("WallJump", "XWallJump", XWallJump)
+end)
 
-local function HWallJump(ply, move, angle, dir)
-	local fwd_buttons, side_buttons = GetButtons(move:GetButtons()) 
-	local fwd_old_buttons = GetButtons(move:GetOldButtons()) 
-	local last_walljump = ply.activities.queue_walljump.last_walljump
-
-	if ((fwd_buttons == 0 and side_buttons > 0) and fwd_old_buttons == 0) and last_walljump ~= CurTime() then
-		ActivityService.AddStats(ply, "queue_walljump", {queue = {walljump = "hwalljump", dir = dir, angle = angle, time = CurTime()}})
-		ActivityService.SetStats(ply, "queue_walljump", {last_walljump = CurTime()})
-	end
-	
-end
-hook.Add("WallJump", "HWallJump", HWallJump)
-
-local function QueueWallJump(ply, move, cmd)
+hook.Add("SetupMove", "Activity.WallJumpQueue", function(ply, move, cmd)
 	local queue = ply.activities.queue_walljump.queue
 
 	if #queue > 0 and IsFirstTimePredicted() then 
+		local walljump_type = queue[1].walljump
+
 		if queue[1].time + 0.2 > CurTime() then
 			local fwd_buttons, side_buttons = GetButtons(move:GetButtons())
 			local walljump_dir = queue[1].dir:Dot(move:GetAngles():Right())
 
-			if queue[1].walljump == "hwalljump" and fwd_buttons > 0 then
+			if walljump_type == "hwalljump" and fwd_buttons > 0 then
 				ply.activities.queue_walljump.queue[1].walljump = "xwalljump"
 			elseif 
-				queue[1].walljump == "xwalljump" and 
+				walljump_type == "xwalljump" and 
 				fwd_buttons == 0 and 
 				side_buttons ~= 1536 and 
 				((walljump_dir > 0 and 
@@ -82,14 +83,21 @@ local function QueueWallJump(ply, move, cmd)
 				move:KeyDown(IN_MOVERIGHT)) 
 			then
 				table.remove(ply.activities.queue_walljump.queue, 1)
-				ActivityService.SetStats(ply, "vwalljump", {count = ply.activities.vwalljump.count + 1})
+				ActivityService.SetData(ply, "vwalljump", {count = ply.activities.vwalljump.count + 1})
 			end
 		else
-			ActivityService.SetStats(ply, queue[1].walljump, {count = ply.activities[queue[1].walljump].count + 1})
-			ActivityService.SetStats(ply, "walljump_angle", {[queue[1].walljump.."_sum"] = ply.activities.walljump_angle[queue[1].walljump.."_sum"] + queue[1].angle})
-			ActivityService.SetStats(ply, "walljump_angle", {[queue[1].walljump.."_samples"] = ply.activities.walljump_angle[queue[1].walljump.."_samples"] + 1})
+			ActivityService.SetData(ply, walljump_type, {
+				count = ply.activities[walljump_type].count + 1,
+				angle = {sum = ply.activities[walljump_type].angle.sum + queue[1].angle, samples = ply.activities[walljump_type].angle.samples + 1}
+			})
+
+			if 0.85 > queue[1].interval then
+				ActivityService.SetData(ply, walljump_type, {
+					interval = {sum = ply.activities[walljump_type].interval.sum + queue[1].interval, samples = ply.activities[walljump_type].interval.samples + 1}
+				})
+			end
+
 			table.remove(ply.activities.queue_walljump.queue, 1)
 		end
 	end
-end
-hook.Add("SetupMove", "QueueWallJump", QueueWallJump)
+end)
