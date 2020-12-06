@@ -24,6 +24,7 @@ hook.Add("OnReloaded", "ActivityService.Reload", ActivityService.Reload)
 
 function ActivityService.NewActivity(activity)
 	assert(activity.key, "Missing activity key")
+	assert(activity.key, "Missing activity name")
 
 	local new_activity = {}
 
@@ -51,7 +52,7 @@ function ActivityService.SetData(ply, activity, data)
 		end
 	end
 
-	hook.Call("UpdateActivity", GAMEMODE, ply, activity, data)
+	hook.Call("Activity."..ply.activities[activity].name, GAMEMODE, ply, activity)
 end
 
 function ActivityService.AddData(ply, activity, data)
@@ -67,7 +68,7 @@ function ActivityService.AddData(ply, activity, data)
 		end
 	end
 
-	hook.Call("UpdateActivity", GAMEMODE, ply, activity, data)
+	hook.Call("Activity."..ply.activities[activity].name, GAMEMODE, ply, activity)
 end
 
 function ActivityService.ResetActivity(ply, activity)
