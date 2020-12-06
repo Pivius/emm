@@ -20,10 +20,12 @@ function TaskService:Hook(hook, identifier, func)
 		local var_args = {...}
 		local ply = var_args[1]
 
+		table.insert(var_args, 2, self)
+
 		if not IsEntity(ply) then
 			self:Stop()
 		else
-			if not self:HasCompleted(ply) and self:IsRunningTask(ply) and func(...) then
+			if not self:HasCompleted(ply) and self:IsRunningTask(ply) and func(unpack(var_args)) then
 				self:Complete(ply)
 			end
 		end
@@ -40,8 +42,8 @@ function TaskService:Stop()
 	hook.Remove(self.hook, self.identifier)
 end
 
-function TaskService:AddPlayer(ply)
-	self.running[ply] = true
+function TaskService:AddPlayer(data)
+	self.running[data.player] = data
 end
 
 function TaskService:RemovePlayer(ply)
@@ -49,9 +51,9 @@ function TaskService:RemovePlayer(ply)
 end
 
 function TaskService:Complete(ply)
-	self.completions[ply] = true
+	self.completions[ply] = self.running[ply]
 	self.running[ply] = false
-	hook.Call("Task_Complete", nil, ply, self.identifier)
+	hook.Call("Task_Complete", GAMEMODE, ply, self.identifier)
 end
 
 function TaskService:Clear()
@@ -64,5 +66,5 @@ function TaskService:IsRunningTask(ply)
 end
 
 function TaskService:HasCompleted(ply)
-	return self.completions[ply] == true
+	return self.completions[ply] ~= false
 end
