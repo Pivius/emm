@@ -129,6 +129,8 @@ function WallslideService.SetupWallslide(ply, move)
 				WallslideService.Effect(ply, trace)
 				ply.last_wallslide_effect_time = cur_time
 			end
+
+			hook.Call("Wallslide", GAMEMODE, ply, move, trace)
 		elseif WallslideService.Wallsliding(ply) and not WallslideService.FinishedWallslide(ply) then
 			ply.wallsliding = false
 			ply.stamina.wallslide:SetActive(false)

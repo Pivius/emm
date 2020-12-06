@@ -120,8 +120,7 @@ function WalljumpService.Walljump(ply, move, dir)
 		(58 > WalljumpService.GetAngle(dir, trace.HitNormal))
 	then
 		did_walljump = true
-
-		hook.Call("WallJump", GAMEMODE, ply, move, WalljumpService.GetAngle(dir, trace.HitNormal), dir)
+		hook.Call("Walljump", GAMEMODE, ply, move, WalljumpService.GetAngle(dir, trace.HitNormal), dir)
 
 		if SERVER or SettingsService.Get "clientside_walljump" then
 			move:SetVelocity(move:GetVelocity() + WalljumpService.Velocity(ply, dir))

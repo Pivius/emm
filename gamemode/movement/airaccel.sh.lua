@@ -117,6 +117,8 @@ function AiraccelService.SetupAiraccel(ply, move)
 		if ply:Alive() and not ply:OnGround() then
 			local vel_diff, new_vel = AiraccelService.Velocity(ply, move, ply.air_accelerate)
 			
+			hook.Call("Airstrafe", GAMEMODE, ply, move, new_vel, vel_diff)
+
 			if vel_diff > 0 then
 				move:SetVelocity(new_vel)
 			end
