@@ -23,6 +23,12 @@ ActivityService.NewActivity{
 }
 
 ActivityService.NewActivity{
+	key = "cornerjump",
+	name = "Cornerjump",
+	count = 0,
+}
+
+ActivityService.NewActivity{
 	key = "queue_walljump",
 	name = "QueueWJ",
 	queue = {},
@@ -39,15 +45,29 @@ local function GetButtons(buttons)
 	return bit.band(buttons, bit.bor(IN_FORWARD, IN_BACK)), bit.band(buttons, bit.bor(IN_MOVELEFT, IN_MOVERIGHT))
 end
 
-hook.Add("WallJump", "Activity.Walljump", function(ply, move, angle, dir)
+local function CanWallJump(ply, dir)
+	local trace = WalljumpService.Trace(ply, dir)
+
+	return trace.Hit and (ply.can_walljump_sky or not trace.HitSky) and (58 > WalljumpService.GetAngle(dir, trace.HitNormal))
+end
+
+hook.Add("Walljump", "Activity.Walljump", function(ply, move, angle, dir)
 	local fwd_buttons, side_buttons = GetButtons(move:GetButtons()) 
 	local fwd_old_buttons = GetButtons(move:GetOldButtons()) 
 	local cur_time = CurTime()
 	local walljump_type = nil
 	
 	if ply.activities.queue_walljump.last_walljump ~= cur_time then
-		if ((fwd_buttons > 0 and side_buttons > 0) or (fwd_old_buttons > 0 and side_buttons > 0))  then
-			walljump_type = "xwalljump"
+		if ((fwd_buttons > 0 and side_buttons > 0) or (fwd_old_buttons > 0 and side_buttons > 0)) then
+			local fwd = move:GetAngles():Forward()
+			fwd.z = 0
+			fwd:Normalize()
+
+			if WalljumpService.Trace(ply, -dir).Hit and (WalljumpService.Trace(ply, fwd).Hit or WalljumpService.Trace(ply, -fwd).Hit) then
+				ActivityService.SetData(ply, "cornerjump", {count = ply.activities.cornerjump.count + 1})
+			else
+				walljump_type = "xwalljump"
+			end
 		elseif ((fwd_buttons == 0 and side_buttons > 0) and fwd_old_buttons == 0) then
 			walljump_type = "hwalljump"
 		end
@@ -67,7 +87,7 @@ hook.Add("WallJump", "Activity.Walljump", function(ply, move, angle, dir)
 	
 end)
 
-hook.Add("SetupMove", "Activity.WallJumpQueue", function(ply, move, cmd)
+hook.Add("SetupMove", "Activity.WalljumpQueue", function(ply, move, cmd)
 	local queue = ply.activities.queue_walljump.queue
 
 	if #queue > 0 and IsFirstTimePredicted() then 
