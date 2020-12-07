@@ -1,11 +1,10 @@
 TaskService = TaskService or Class.New()
 
 
--- Utils
+-- # Utils
 
 function TaskService:Init()
-	self.completions = {}
-	self.running = {}
+	self.players = {}
 	self:Hook("Move", "Jump", function(ply, move)
 		if move:KeyPressed(IN_JUMP) then
 			return true
@@ -15,12 +14,13 @@ end
 
 function TaskService:Hook(hook, identifier, func)
 	self.hook = hook
-	self.identifier = "Task_" .. identifier
+	self.identifier = "TaskService." .. identifier
 	self.func = function(...)
 		local var_args = {...}
 		local ply = var_args[1]
 
 		table.insert(var_args, 2, self)
+		table.insert(var_args, 3, self.players[ply])
 
 		if not IsEntity(ply) then
 			self:Stop()
@@ -43,28 +43,27 @@ function TaskService:Stop()
 end
 
 function TaskService:AddPlayer(data)
-	self.running[data.player] = data
+	data.completed = false
+	self.players[data.player] = data
 end
 
 function TaskService:RemovePlayer(ply)
-	self.running[ply] = false
+	self.players[ply] = false
 end
 
 function TaskService:Complete(ply)
-	self.completions[ply] = self.running[ply]
-	self.running[ply] = false
-	hook.Call("Task_Complete", GAMEMODE, ply, self.identifier)
+	self.players[ply].completed = true
+	hook.Call("Task_Complete", GAMEMODE, ply, self)
 end
 
 function TaskService:Clear()
-	self.completions = {}
-	self.running = {}
+	self.players = {}
 end
 
 function TaskService:IsRunningTask(ply)
-	return self.running[ply]
+	return not Falsy(self.players[ply])
 end
 
 function TaskService:HasCompleted(ply)
-	return self.completions[ply] ~= false
+	return self.players[ply].completed
 end
