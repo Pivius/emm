@@ -129,9 +129,11 @@ hook.Add("SetupMove", "Activity.WalljumpQueue", function(ply, move, cmd)
 end)
 
 hook.Add("SetupMove", "Activity.Wallcheck", function(ply, move, cmd) 
-	if ply.activities.queue_walljump.last_walljump + 1.5 >= CurTime() and IsFirstTimePredicted() then
-		if ply.old_velocity:Length2DSqr() * 0.2 > move:GetVelocity():Length2DSqr() then
-			ActivityService.SetData(ply, "wallcheck", {count = ply.activities.wallcheck.count + 1})
-		end
+	if 
+		ply.activities.queue_walljump.last_walljump + 1.5 >= CurTime() and 
+		IsFirstTimePredicted() and 
+		ply.old_velocity:Length2DSqr() * 0.2 > move:GetVelocity():Length2DSqr() 
+	then
+		ActivityService.SetData(ply, "wallcheck", {count = ply.activities.wallcheck.count + 1})
 	end
 end)
