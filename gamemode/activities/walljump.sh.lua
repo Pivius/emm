@@ -1,4 +1,4 @@
--- Walljump types
+-- # Walljump types
 
 ActivityService.NewActivity{
 	key = "xwalljump",
@@ -41,6 +41,9 @@ ActivityService.NewActivity{
 	count = 0,
 }
 
+
+-- # Utils
+
 local function GetButtons(buttons)
 	return bit.band(buttons, bit.bor(IN_FORWARD, IN_BACK)), bit.band(buttons, bit.bor(IN_MOVELEFT, IN_MOVERIGHT))
 end
@@ -50,6 +53,9 @@ local function CanWallJump(ply, dir)
 
 	return trace.Hit and (ply.can_walljump_sky or not trace.HitSky) and (58 > WalljumpService.GetAngle(dir, trace.HitNormal))
 end
+
+
+-- # Hooks
 
 hook.Add("Walljump", "Activity.Walljump", function(ply, move, angle, dir)
 	local fwd_buttons, side_buttons = GetButtons(move:GetButtons()) 

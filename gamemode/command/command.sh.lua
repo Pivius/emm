@@ -8,9 +8,9 @@ CommandService.object_types = {
 	bool = tobool,
 	string = tostring,
 	number = tonumber,
-	table = function(tbl) return CommandService.ToType("table", "string.Explode(',', '" .. tbl .. "')") end,
-	vector = function(vector) return CommandService.ToType("vector", "Vector(unpack(string.Explode(',', '" .. vector .. "')))") end,
-	angle = function(ang) return CommandService.ToType("angle", "Angle(unpack(string.Explode(',', '" .. ang .. "')))") end,
+	table = function(tbl) return CommandService.ToType("table", "string.Explode(',', '"..tbl.."')") end,
+	vector = function(vector) return CommandService.ToType("vector", "Vector(unpack(string.Explode(',', '"..vector.."')))") end,
+	angle = function(ang) return CommandService.ToType("angle", "Angle(unpack(string.Explode(',', '"..ang.."')))") end,
 	player = function(ply) return CommandService.FindTarget(ply)[1] end,	
 	players = function(tbl) 
 		local targets = CommandService.object_types.table(tbl)
@@ -104,7 +104,7 @@ end
 
 function CommandService.AutoComplete(cmd, args)
 	local auto_complete = {}
-	local con_cmd = cmd .. " "
+	local con_cmd = cmd.." "
 
 	cmd = CommandService.Commands[cmd:sub(5)]
 
@@ -113,20 +113,20 @@ function CommandService.AutoComplete(cmd, args)
 		
 		if cmd.args[#args] == "player" then
 			for _, ply in pairs(player.GetAll()) do
-				if string.lower(" " .. ply:Nick()):find(args[#args]:lower()) then
-					table.insert(auto_complete, con_cmd .. ply:Nick())
+				if string.lower(" "..ply:Nick()):find(args[#args]:lower()) then
+					table.insert(auto_complete, con_cmd..ply:Nick())
 				end
 			end
 
 			return auto_complete
 		elseif cmd.args[#args] == "number" then
-			auto_complete = {con_cmd .. args[#args]}
+			auto_complete = {con_cmd..args[#args]}
 
 			if isnumber(cmd.args[#args + 1]) then
-				auto_complete = {con_cmd .. "[".. cmd.args[#args + 1] .. "]"}
+				auto_complete = {con_cmd.."[".. cmd.args[#args + 1].."]"}
 
 				if isnumber(cmd.args[#args + 2]) then
-					auto_complete = {con_cmd .. "[".. cmd.args[#args + 1] .. " - " .. cmd.args[#args + 2] .. "]"}
+					auto_complete = {con_cmd.."[".. cmd.args[#args + 1].." - "..cmd.args[#args + 2].."]"}
 				end
 			end
 
@@ -136,7 +136,7 @@ function CommandService.AutoComplete(cmd, args)
 end
 
 function CommandService.ToType(type, arg)
-	local type_pass, arg = CompileString("return is" .. type .. "(" .. arg .. "), " .. arg, "CommandService.TypeCheck")()
+	local type_pass, arg = CompileString("return is"..type.."("..arg.."), "..arg, "CommandService.TypeCheck")()
 
 	if type_pass then
 		return arg
@@ -164,9 +164,6 @@ function CommandService.AddCommand(props)
 	end
 	
 	assert(istable(props.varargs), "Varargs is not a table")
-
-
-
 	cmd:SetCommand(props.name)
 	cmd:SetCallback(unpack(props.varargs), props.callback)
 	CommandService.CreateConCommand(cmd)
