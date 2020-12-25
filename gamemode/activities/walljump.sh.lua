@@ -5,7 +5,9 @@ ActivityService.NewActivity{
 	name = "XWJ",
 	count = 0,
 	angle = {sum = 0, samples = 0},
-	interval = {sum = 0, samples = 0}
+	interval = {sum = 0, samples = 0},
+	interval_table = {},
+	delta = 0
 }
 
 ActivityService.NewActivity{
@@ -13,7 +15,9 @@ ActivityService.NewActivity{
 	name = "HWJ",
 	count = 0,
 	angle = {sum = 0, samples = 0},
-	interval = {sum = 0, samples = 0}
+	interval = {sum = 0, samples = 0},
+	interval_table = {},
+	delta = 0
 }
 
 ActivityService.NewActivity{
@@ -125,7 +129,12 @@ hook.Add("SetupMove", "Activity.WalljumpQueue", function(ply, move, cmd)
 
 			if 0.85 > queue[1].interval then
 				ActivityService.SetData(ply, walljump_type, {
-					interval = {sum = ply.activities[walljump_type].interval.sum + queue[1].interval, samples = ply.activities[walljump_type].interval.samples + 1}
+					interval = {sum = ply.activities[walljump_type].interval.sum + queue[1].interval, samples = ply.activities[walljump_type].interval.samples + 1},
+					delta = queue[1].interval
+				})
+
+				ActivityService.AddData(ply, walljump_type, {
+					interval_table = queue[1].interval
 				})
 			end
 

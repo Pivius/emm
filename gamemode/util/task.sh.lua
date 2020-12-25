@@ -65,5 +65,9 @@ function TaskService:IsRunningTask(ply)
 end
 
 function TaskService:HasCompleted(ply)
-	return self.players[ply].completed
+	if self.players[ply] then
+		return self.players[ply].completed
+	end
+	
+	return false
 end
