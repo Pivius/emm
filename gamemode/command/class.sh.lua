@@ -47,11 +47,8 @@ function Command:SetCommand(...)
 	table.insert(self.cmds, self.name:sub(1, 1))
 end
 
-function Command:SetCallback(...)
-	local callback
-
-	self.args = {...}
-	callback = table.remove(self.args)
+function Command:SetCallback(args, callback)
+	self.args = args
 	self.callback = function(...)
 		local args = self.args
 		local command_args = {...}

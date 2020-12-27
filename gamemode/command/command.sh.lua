@@ -165,7 +165,7 @@ function CommandService.AddCommand(props)
 	
 	assert(istable(props.varargs), "Varargs is not a table")
 	cmd:SetCommand(props.name)
-	cmd:SetCallback(unpack(props.varargs), props.callback)
+	cmd:SetCallback(props.varargs, props.callback)
 	CommandService.CreateConCommand(cmd)
 	CommandService.Commands[cmd.name] = cmd
 end
