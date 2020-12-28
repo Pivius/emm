@@ -78,6 +78,7 @@ hook.Add("Walljump", "Activity.Walljump", function(ply, move, angle, dir)
 			if WalljumpService.Trace(ply, -dir).HitWorld then
 				if WalljumpService.Trace(ply, fwd).HitWorld or WalljumpService.Trace(ply, -fwd).HitWorld then
 					ActivityService.AddData(ply, "cornerjump", {count = 1})
+					ActivityService.Run(ply, "cornerjump")
 				else
 					walljump_type = "xwalljump"
 				end
@@ -100,6 +101,7 @@ hook.Add("Walljump", "Activity.Walljump", function(ply, move, angle, dir)
 			}
 		})
 		ActivityService.SetData(ply, "queue_walljump", {last_walljump = cur_time})
+		ActivityService.Run(ply, "queue_walljump")
 	end
 	
 end)
@@ -128,6 +130,7 @@ hook.Add("SetupMove", "Activity.WalljumpQueue", function(ply, move, cmd)
 			then
 				ActivityService.RemoveData(ply, "queue_walljump", {queue = 1})
 				ActivityService.AddData(ply, "vwalljump", {count = 1})
+				ActivityService.Run(ply, "vwalljump")
 			end
 		else
 			ActivityService.AddData(ply, walljump_type, {count = 1, angle = queue[1].angle})
@@ -144,6 +147,7 @@ hook.Add("SetupMove", "Activity.WalljumpQueue", function(ply, move, cmd)
 				end
 			end
 
+			ActivityService.Run(ply, walljump_type)
 			table.remove(ply.activities.queue_walljump.queue, 1)
 		end
 	end
@@ -157,5 +161,6 @@ hook.Add("SetupMove", "Activity.Wallcheck", function(ply, move, cmd)
 		ply.old_velocity:Length2DSqr() >= 250000
 	then
 		ActivityService.AddData(ply, "wallcheck", {count = 1})
+		ActivityService.Run(ply, "wallcheck")
 	end
 end)

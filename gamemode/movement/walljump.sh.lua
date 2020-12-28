@@ -12,6 +12,7 @@ function WalljumpService.InitPlayerProperties(ply)
 	ply.walljump_up_velocity = 200
 	ply.walljump_sound = "npc/footsteps/hardboot_generic"
 	ply.last_walljump_time = 0
+	ply.walljump_max_angle = 58
 end
 hook.Add(
 	SERVER and "InitPlayerProperties" or "InitLocalPlayerProperties",
@@ -117,7 +118,7 @@ function WalljumpService.Walljump(ply, move, dir)
 	if
 		trace.Hit and
 		(ply.can_walljump_sky or not trace.HitSky) and
-		(58 > WalljumpService.GetAngle(dir, trace.HitNormal))
+		(ply.walljump_max_angle > WalljumpService.GetAngle(dir, trace.HitNormal))
 	then
 		did_walljump = true
 		hook.Call("Walljump", GAMEMODE, ply, move, WalljumpService.GetAngle(dir, trace.HitNormal), dir)
