@@ -4,20 +4,16 @@ ActivityService.NewActivity{
 	key = "xwalljump",
 	name = "XWJ",
 	count = 0,
-	angle = {sum = 0, samples = 0},
-	interval = {sum = 0, samples = 0},
-	interval_table = {},
-	delta = 0
+	angle = {},
+	interval = {},
 }
 
 ActivityService.NewActivity{
 	key = "hwalljump",
 	name = "HWJ",
 	count = 0,
-	angle = {sum = 0, samples = 0},
-	interval = {sum = 0, samples = 0},
-	interval_table = {},
-	delta = 0
+	angle = {},
+	interval = {},
 }
 
 ActivityService.NewActivity{
@@ -46,6 +42,12 @@ ActivityService.NewActivity{
 }
 
 
+-- # Enums
+
+MAX_INTERVAL_SAMPLES = 50
+MAX_ANGLE_SAMPLES = 50
+
+
 -- # Utils
 
 local function GetButtons(buttons)
@@ -66,15 +68,19 @@ hook.Add("Walljump", "Activity.Walljump", function(ply, move, angle, dir)
 	local fwd_old_buttons = GetButtons(move:GetOldButtons()) 
 	local cur_time = CurTime()
 	local walljump_type = nil
-	
+
 	if ply.activities.queue_walljump.last_walljump ~= cur_time then
 		if ((fwd_buttons > 0 and side_buttons > 0) or (fwd_old_buttons > 0 and side_buttons > 0)) then
 			local fwd = move:GetAngles():Forward()
 			fwd.z = 0
 			fwd:Normalize()
 
-			if WalljumpService.Trace(ply, -dir).Hit and (WalljumpService.Trace(ply, fwd).Hit or WalljumpService.Trace(ply, -fwd).Hit) then
-				ActivityService.SetData(ply, "cornerjump", {count = ply.activities.cornerjump.count + 1})
+			if WalljumpService.Trace(ply, -dir).HitWorld then
+				if WalljumpService.Trace(ply, fwd).HitWorld or WalljumpService.Trace(ply, -fwd).HitWorld then
+					ActivityService.AddData(ply, "cornerjump", {count = 1})
+				else
+					walljump_type = "xwalljump"
+				end
 			else
 				walljump_type = "xwalljump"
 			end
@@ -87,15 +93,17 @@ hook.Add("Walljump", "Activity.Walljump", function(ply, move, angle, dir)
 		ActivityService.AddData(ply, "queue_walljump", {
 			queue = {
 				walljump = walljump_type, 
-				dir = dir, angle = angle, 
+				dir = dir, 
+				angle = angle, 
 				time = cur_time, 
 				interval = math.Round(cur_time - ply.activities.queue_walljump.last_walljump, 4)
-			}, 
-			last_walljump = cur_time
+			}
 		})
+		ActivityService.SetData(ply, "queue_walljump", {last_walljump = cur_time})
 	end
 	
 end)
+
 
 hook.Add("SetupMove", "Activity.WalljumpQueue", function(ply, move, cmd)
 	local queue = ply.activities.queue_walljump.queue
@@ -118,24 +126,22 @@ hook.Add("SetupMove", "Activity.WalljumpQueue", function(ply, move, cmd)
 				0 > walljump_dir and 
 				move:KeyDown(IN_MOVERIGHT)) 
 			then
-				table.remove(ply.activities.queue_walljump.queue, 1)
-				ActivityService.SetData(ply, "vwalljump", {count = ply.activities.vwalljump.count + 1})
+				ActivityService.RemoveData(ply, "queue_walljump", {queue = 1})
+				ActivityService.AddData(ply, "vwalljump", {count = 1})
 			end
 		else
-			ActivityService.SetData(ply, walljump_type, {
-				count = ply.activities[walljump_type].count + 1,
-				angle = {sum = ply.activities[walljump_type].angle.sum + queue[1].angle, samples = ply.activities[walljump_type].angle.samples + 1}
-			})
+			ActivityService.AddData(ply, walljump_type, {count = 1, angle = queue[1].angle})
+
+			if #ply.activities[walljump_type].angle > MAX_ANGLE_SAMPLES then
+				ActivityService.RemoveData(ply, walljump_type, {angle = 1})
+			end
 
 			if 0.85 > queue[1].interval then
-				ActivityService.SetData(ply, walljump_type, {
-					interval = {sum = ply.activities[walljump_type].interval.sum + queue[1].interval, samples = ply.activities[walljump_type].interval.samples + 1},
-					delta = queue[1].interval
-				})
+				ActivityService.AddData(ply, walljump_type, {interval = queue[1].interval})
 
-				ActivityService.AddData(ply, walljump_type, {
-					interval_table = queue[1].interval
-				})
+				if #ply.activities[walljump_type].interval > MAX_INTERVAL_SAMPLES then
+					ActivityService.RemoveData(ply, walljump_type, {interval = 1})
+				end
 			end
 
 			table.remove(ply.activities.queue_walljump.queue, 1)
@@ -147,8 +153,9 @@ hook.Add("SetupMove", "Activity.Wallcheck", function(ply, move, cmd)
 	if 
 		ply.activities.queue_walljump.last_walljump + 1.5 >= CurTime() and 
 		IsFirstTimePredicted() and 
-		ply.old_velocity:Length2DSqr() * 0.2 > move:GetVelocity():Length2DSqr() 
+		ply.old_velocity:Length2DSqr() * 0.2 > move:GetVelocity():Length2DSqr() and
+		ply.old_velocity:Length2DSqr() >= 250000
 	then
-		ActivityService.SetData(ply, "wallcheck", {count = ply.activities.wallcheck.count + 1})
+		ActivityService.AddData(ply, "wallcheck", {count = 1})
 	end
 end)
