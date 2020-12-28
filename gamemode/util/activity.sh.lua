@@ -51,8 +51,6 @@ function ActivityService.SetData(ply, activity, data)
 			ply.activities[activity][k] = v
 		end
 	end
-
-	hook.Call("Activity.NewData."..ply.activities[activity].name, GAMEMODE, ply, activity)
 end
 
 function ActivityService.AddData(ply, activity, data)
@@ -63,16 +61,14 @@ function ActivityService.AddData(ply, activity, data)
 			if istable(ply.activities[activity][k]) then
 				table.insert(ply.activities[activity][k], v)
 			else
-				if isnumber(ply.activities[activity][k]) then
-					ply.activities[activity][k] = ply.activities[activity][k] + v
-				else
-					ply.activities[activity][k] = v
-				end
+				ply.activities[activity][k] = v
 			end
 		end
 	end
+end
 
-	hook.Call("Activity.NewData."..ply.activities[activity].name, GAMEMODE, ply, activity)
+function ActivityService.Run(ply, activity)
+	hook.Call("Activity."..ply.activities[activity].name, GAMEMODE, ply, activity)
 end
 
 function ActivityService.RemoveData(ply, activity, data)
@@ -87,8 +83,6 @@ function ActivityService.RemoveData(ply, activity, data)
 			end
 		end
 	end
-
-	hook.Call("Activity.RemoveData."..ply.activities[activity].name, GAMEMODE, ply, activity)
 end
 
 function ActivityService.ResetActivity(ply, activity)
