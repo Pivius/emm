@@ -5,11 +5,6 @@ TaskService = TaskService or Class.New()
 
 function TaskService:Init()
 	self.players = {}
-	self:Hook("Move", "Jump", function(ply, move)
-		if move:KeyPressed(IN_JUMP) then
-			return true
-		end
-	end)
 end
 
 function TaskService:Hook(hook, identifier, func)
@@ -40,6 +35,10 @@ end
 
 function TaskService:Stop()
 	hook.Remove(self.hook, self.identifier)
+end
+
+function TaskService:GetPlayerData(ply)
+	return self.players[ply]
 end
 
 function TaskService:AddPlayer(data)
