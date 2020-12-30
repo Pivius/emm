@@ -24,9 +24,10 @@ hook.Add("OnReloaded", "ActivityService.Reload", ActivityService.Reload)
 
 function ActivityService.NewActivity(activity)
 	assert(activity.key, "Missing activity key")
-	assert(activity.key, "Missing activity name")
+	assert(activity.name, "Missing activity name")
 
-	local new_activity = {}
+	local new_activity = (activity.inherit and table.Copy(ActivityService.activities[activity.inherit])) or {}
+	local key = activity.key
 
 	for k, v in pairs(activity) do
 		if k ~= "key" then
@@ -34,13 +35,13 @@ function ActivityService.NewActivity(activity)
 		end
 	end
 
-	if not ActivityService.activities[activity.key] then
+	if not ActivityService.activities[key] then
 		for _, ply in pairs(player.GetAll()) do
-			ply.activities[activity.key] = new_activity
+			ply.activities[key] = new_activity
 		end
 	end
 
-	ActivityService.activities[activity.key] = new_activity
+	ActivityService.activities[key] = new_activity
 end
 
 function ActivityService.SetData(ply, activity, data)

@@ -11,15 +11,13 @@ ActivityService.NewActivity{
 ActivityService.NewActivity{
 	key = "hwalljump",
 	name = "HWJ",
-	count = 0,
-	angle = {},
-	interval = {},
+	inherit = "xwalljump",
 }
 
 ActivityService.NewActivity{
 	key = "vwalljump",
 	name = "VWJ",
-	count = 0,
+	inherit = "xwalljump",
 }
 
 ActivityService.NewActivity{
