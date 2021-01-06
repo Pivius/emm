@@ -20,6 +20,7 @@ function ActivityService.Reload()
 end
 hook.Add("OnReloaded", "ActivityService.Reload", ActivityService.Reload)
 
+
 -- # Utils
 
 function ActivityService.NewActivity(activity)

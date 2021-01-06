@@ -18,7 +18,7 @@ hook.Add(
 function TutorialService.GetAngle(ply)
 	local pos = ply:GetPos()
 	local angle = ply:EyeAngles()
-	local distance = 100
+	local distance = 50
 	local trace_east = util.TraceLine{
 		start = pos,
 		endpos = pos + Vector(distance),
@@ -203,6 +203,7 @@ function TutorialService.DetermineKeys(ply, move)
 	end
 end
 hook.Add("Move", "TutorialService.DetermineKeys", TutorialService.DetermineKeys)
+
 
 -- # Command
 

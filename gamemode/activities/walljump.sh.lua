@@ -6,6 +6,7 @@ ActivityService.NewActivity{
 	count = 0,
 	angle = {},
 	interval = {},
+	velocity = {}
 }
 
 ActivityService.NewActivity{
@@ -126,9 +127,7 @@ hook.Add("SetupMove", "Activity.WalljumpQueue", function(ply, move, cmd)
 				0 > walljump_dir and 
 				move:KeyDown(IN_MOVERIGHT)) 
 			then
-				ActivityService.RemoveData(ply, "queue_walljump", {queue = 1})
-				ActivityService.AddData(ply, "vwalljump", {count = 1})
-				ActivityService.Run(ply, "vwalljump")
+				ply.activities.queue_walljump.queue[1].walljump = "vwalljump"
 			end
 		else
 			ActivityService.AddData(ply, walljump_type, {count = 1, angle = queue[1].angle})
