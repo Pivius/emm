@@ -130,7 +130,7 @@ hook.Add("SetupMove", "Activity.WalljumpQueue", function(ply, move, cmd)
 				ply.activities.queue_walljump.queue[1].walljump = "vwalljump"
 			end
 		else
-			ActivityService.AddData(ply, walljump_type, {count = 1, angle = queue[1].angle})
+			ActivityService.AddData(ply, walljump_type, {count = 1, angle = math.Round(queue[1].angle, 2)})
 
 			if #ply.activities[walljump_type].angle > MAX_ANGLE_SAMPLES then
 				ActivityService.RemoveData(ply, walljump_type, {angle = 1})

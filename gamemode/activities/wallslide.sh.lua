@@ -15,13 +15,8 @@ ActivityService.NewActivity{
 -- # Hooks
 
 hook.Add("Wallslide", "Activity.Wallslide", function(ply, move, trace)
-	if ply.last_wallslide_time == CurTime() then
+	if move:KeyPressed(IN_ATTACK2) and IsFirstTimePredicted() then
 		ActivityService.AddData(ply, "wallslide", {count = 1})
-	end
-
-	ActivityService.AddData(ply, "wallslide", {time = FrameTime()})
-
-	if ply.old_velocity < move:GetVelocity() then
-		ActivityService.AddData(ply, "lag_slide", {count = 1})
+		ActivityService.Run(ply, "wallslide")
 	end
 end)
