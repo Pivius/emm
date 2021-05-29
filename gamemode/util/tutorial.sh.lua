@@ -80,7 +80,7 @@ TutorialService.notification = {
 
 TaskService.NewTask({
 	key = "tutorial_walljump",
-	name = "WalJump Tutorial",
+	name = "WallJump Tutorial",
 	description = TutorialService.notification[TUTORIAL_WALLJUMP],
 	hook = "Walljump",
 	func = function(ply, task)
@@ -204,9 +204,9 @@ TaskService.NewTask({
 
 function TutorialService.Command(ply)
 	if not ply.running_tutorial then
-		ply.running_tutorial = "tutorial_vwj"
+		ply.running_tutorial = "tutorial_walljump"
 		TaskService.Reset(ply, {"tutorial_walljump", "tutorial_cornerjump", "tutorial_wallslide", "tutorial_vwj", "tutorial_xwj"})
-		ply.tasks["tutorial_vwj"].running = true
+		ply.tasks["tutorial_walljump"].running = true
 	else
 		TaskService.Reset(ply, {"tutorial_walljump", "tutorial_cornerjump", "tutorial_wallslide", "tutorial_vwj", "tutorial_xwj"})
 		ply.running_tutorial = false
