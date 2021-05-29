@@ -44,44 +44,44 @@ CommandService.symbols = {
 
 -- # Utils
 
+function CommandService.FindByName(name)
+	local player_list = {}
+
+	for _, ply in pairs(player.GetAll()) do
+		if string.lower(ply:Nick()):find(name:lower()) and not table.HasValue(player_list, ply) then
+			table.insert(player_list, ply)
+		end
+	end
+	return player_list
+end
+
 function CommandService.FindTarget(target)
-	local tbl = {}
+	local player_list = {}
 	
 	if istable(target) then
 		for _, name in pairs(target) do
 			if not IsEntity(name) then
-				for _, ply in pairs(player.GetAll()) do
-					if string.lower(ply:Nick()):find(name:lower()) and not table.HasValue(tbl, ply) then
-						table.insert(tbl, ply)
-						break
-					end
-				end
+				player_list = CommandService.FindByName(name)
 			else
-				table.insert(tbl, target)
+				table.insert(player_list, target)
 			end
 		end
 	else
 		if not IsEntity(target) then
-			for _, ply in pairs(player.GetAll()) do
-				if string.lower(ply:Nick()):find(target:lower()) then
-					table.insert(tbl, ply)
-				end
-			end
+			player_list = CommandService.FindByName(name)
 		else
-			table.insert(tbl, target)
+			table.insert(player_list, target)
 		end
 	end
 
-	if #tbl > 0 then
-		return tbl
+	if #player_list > 0 then
+		return player_list
 	else
 		return {nil}
 	end
 end
 
 function CommandService.FindCommand(str)
-	local tbl = {}
-
 	str = str:lower()
 
 	for name, cmd in pairs(CommandService.Commands) do
