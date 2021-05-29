@@ -6,6 +6,8 @@ ActivityService.activities = ActivityService.activities or {}
 
 function ActivityService.InitPlayerProperties(ply)
 	ply.activities = table.Copy(ActivityService.activities)
+	ply.activities_bit = 0
+	ply.activities_time = 0
 end
 hook.Add(
 	SERVER and "InitPlayerProperties" or "InitLocalPlayerProperties",
@@ -23,26 +25,30 @@ hook.Add("OnReloaded", "ActivityService.Reload", ActivityService.Reload)
 
 -- # Utils
 
-function ActivityService.NewActivity(activity)
-	assert(activity.key, "Missing activity key")
-	assert(activity.name, "Missing activity name")
+function ActivityService.NewActivity(activity, override_on_reload)
+	if (ActivityService.activities[activity.key] and override_on_reload) or not ActivityService.activities[activity.key] then
+		assert(activity.key, "Missing activity key")
+		assert(activity.name, "Missing activity name")
 
-	local new_activity = (activity.inherit and table.Copy(ActivityService.activities[activity.inherit])) or {}
-	local key = activity.key
+		local new_activity = (activity.inherit and table.Copy(ActivityService.activities[activity.inherit])) or {}
+		local key = activity.key
 
-	for k, v in pairs(activity) do
-		if k ~= "key" then
-			new_activity[k] = v
+		new_activity.bit = (not ActivityService.activities[activity.key] and 2 ^ table.Count(ActivityService.activities)) or ActivityService.activities[activity.key].bit
+
+		for k, v in pairs(activity) do
+			if k ~= "key" then
+				new_activity[k] = v
+			end
 		end
-	end
 
-	if not ActivityService.activities[key] then
-		for _, ply in pairs(player.GetAll()) do
-			ply.activities[key] = new_activity
+		if not ActivityService.activities[key] then
+			for _, ply in pairs(player.GetAll()) do
+				ply.activities[key] = new_activity
+			end
 		end
-	end
 
-	ActivityService.activities[key] = new_activity
+		ActivityService.activities[key] = new_activity
+	end
 end
 
 function ActivityService.SetData(ply, activity, data)
@@ -63,7 +69,7 @@ function ActivityService.AddData(ply, activity, data)
 			if istable(ply.activities[activity][k]) then
 				table.insert(ply.activities[activity][k], v)
 			else
-				ply.activities[activity][k] = v
+				ply.activities[activity][k] = ply.activities[activity][k] + v
 			end
 		end
 	end
@@ -71,6 +77,11 @@ end
 
 function ActivityService.Run(ply, activity)
 	hook.Call("Activity."..ply.activities[activity].name, GAMEMODE, ply, activity)
+	ply.activities_bit = ply.activities_bit + ply.activities[activity].bit
+end
+
+function ActivityService.IsTriggered(ply, activity)
+	return bit.band(ply.activities_bit, ActivityService.GetBit(activity)) ~= 0
 end
 
 function ActivityService.RemoveData(ply, activity, data)
@@ -90,6 +101,17 @@ end
 function ActivityService.ResetActivity(ply, activity)
 	ply.activities[activity] = ActivityService.activities[activity]
 end
+
+function ActivityService.GetBit(activity)
+	return ActivityService.activities[activity].bit
+end
+
+-- # Hooks
+
+function ActivityService.Trigger(ply)
+	ply.activities_bit = 0
+end
+hook.Add("StartCommand", "ActivityService.Trigger", ActivityService.Trigger)
 
 
 -- # Init
